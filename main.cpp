@@ -10,7 +10,13 @@ struct cell {
     int value;		//wartość komórki
     bool fullness;	//czy komórka jest wypełniona
 };
+struct hard_ai {
+    int depth;
+    char colour;
+    int dilation;
+};
 int score_red = 0, score_blue = 0;
+void menu(int* difficulty, int* red_player, int* blue_player, struct hard_ai* hard_ai_red, struct hard_ai* hard_ai_blue, int *matches_number);
 
 void printcell(struct cell cell);   //komórka;     wyswietla komórkę
 void printboard(struct cell board[4][4]);       //plansza       wyświetla planszę
@@ -59,139 +65,115 @@ int main(){
     //testsfml();
     cell board[4][4]{};     //plansza
     char active_player = 'r';       //pierwszy kolor
+    char active_player_type = 0;         //numer aktywego gracza
     char direction = 0;     //zadany kierunek ruchu
-    bool loop = 0;
+    //bool loop = 0;
     board_ini(board);   // inicjoweanie pustej planszy
-    char difficulty = 0;
-    int red = 0; int blue = 0;
+    int difficulty = 0;
+    int red_wins = 0; int blue_wins = 0;
+    int red_player = 0; int blue_player = 0;
+    hard_ai hard_ai_red = { 0,'r',0 };
+    hard_ai hard_ai_blue = { 0,'b',0 };
+    int number_matches = 0;
 
-    
+    menu(&difficulty, &red_player, &blue_player, &hard_ai_red, &hard_ai_blue, &number_matches);
 
-    cout << "1 - solitatire\n"
-        << "2 - player vs player\n"
-        << "3 - player(red) vs computer(easy)\n"
-        << "4 - player(red) vs computer(medium)\n"
-        << "5 - player(red) vs computer(hard)\n"
-        << "6 - computer(medium)(red) vs computer(hard)\n";
-    cin >> difficulty;
-    
-    switch (difficulty)
-    {
-    case '1':
-        new_cell(board, active_player);
-        while (direction != 'x') {      //dla x zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            direction = valid_move(board);
-            cout <<"score = " <<score_blue + score_red << "\n";
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-        }
-        break;
-    case '2':
-        new_cell(board, active_player);
-        while (direction != 'x') {      //dla x zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            direction = valid_move(board);
-            cout <<"blue score = " << score_blue << " red score = " << score_red << "\n";
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-        }
-        break;
-    case '3':
-        new_cell(board, active_player);
-        while (direction != 'x') {      //dla x zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            direction = valid_move(board);
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            merge(board, ai_easy(board));
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-        }
-        break;
-    case '4':
-        new_cell(board, active_player);
-        while (direction != 'x') {      //dla x zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            direction = valid_move(board);
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            merge(board, ai_medium(board,'b'));
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-        }
-        break;
-    case '5':
-        new_cell(board, active_player);
-        while (direction != 'x') {      //dla x zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            direction = valid_move(board);
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            printboard(board);
-            active_player = swap_player(active_player);     //zmień aktywny kolor
-            merge(board, ai_hard(board, 4 ,'b', 50));
-            if (!new_cell(board, active_player)) {
-                direction = 'x';
-            };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-            cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-        }
-        break;
-    case '6':
-        new_cell(board, active_player);
-        for (int i = 0; i < 1; i++) {
-            board_ini(board);
-            direction = 0;
-            active_player = 'r';
+    while (number_matches > 0) {
+        board_ini(board);
+        cout << "\n=====new match=====\n";
+        while (direction != 'x') {
             new_cell(board, active_player);
-            while (direction != 'x') {      //dla x zakończ program
-                printboard(board);
-                active_player = swap_player(active_player);     //zmień aktywny kolor
-                merge(board, ai_medium(board,'r'));
-                cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
-                if (!new_cell(board, active_player)) {
-                    direction = 'x';
-                };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-                printboard(board);
-                active_player = swap_player(active_player);     //zmień aktywny kolor
-                merge(board, ai_hard(board,5,'b',50));
-                if (!new_cell(board, active_player)) {
-                    direction = 'x';
-                };     //jesli nie można dodać nowej komókrki (plansza pełna) zakończ program
-                cout << "blue score = " << score_blue << " red score = " << score_red << "\n";
+            if (active_player == 'r')    active_player_type = red_player;
+            else                         active_player_type = blue_player;
+            printboard(board);
+            switch (active_player_type) {
+            case 1:
+                direction = valid_move(board);
+                break;
+            case 2:
+                merge(board, direction = ai_easy(board));
+                break;
+            case 3:
+                merge(board, direction = ai_medium(board, active_player));
+                break;
+            case 4:
+                if (active_player == 'r')    merge(board, direction = ai_hard(board, hard_ai_red.depth, 'r', hard_ai_red.dilation));
+                else                         merge(board, direction = ai_hard(board, hard_ai_blue.depth, 'b', hard_ai_blue.dilation));
+                break;
+            default:
+                break;
             }
-            if (score_blue > score_red)  blue++;
-            else if (score_blue < score_red)  red++;
-            cout << "========red wins: " << red << " blue wins: " << blue << "=====\n\n";
+            active_player = swap_player(active_player);
+            if (difficulty == 1) cout << "score: " << score_blue + score_red << "\n\n";
+            else cout << "red score: " << score_red << " blue score: " << score_blue << "\n\n";
         }
-        cout << "red wins: " << red << " blue wins: " << blue << "\n";
-        break;
-    default:
-        cout << "nieprawidłowy znak";
-        break;
+        if (difficulty == 2) {
+            if (score_blue < score_red) {
+                cout << "===red wins===\n";
+                red_wins++;
+            }
+            else{
+                cout << "===blue wins===\n";
+                blue_wins++;
+            }
+            cout << "red: " << red_wins
+                << "\nblue: " << blue_wins << "\n\n";
+        }
+        score_blue = 0; score_red = 0;
+        direction = 0;
+        cout << "\n=====match ended=====\n";
+        number_matches--;
     }
     return 0;
+}
+
+void menu(int *difficulty , int *red_player, int *blue_player, struct hard_ai *hard_ai_red, struct hard_ai *hard_ai_blue, int *number_matches) {
+
+    do {
+        cout << "1 - solitatire\n"
+             << "2 - player vs player\n";
+        cin >> *difficulty;
+        cout << *difficulty;
+        if (*difficulty < 1 || *difficulty >2)  cout << "niepoprawna wartosc\n";
+    } while (*difficulty < 1 || *difficulty > 2);
+    do{
+        cout << "chose red player:\n"
+            << "1 - Human\n"
+            << "2 - Computer(easy)\n"
+            << "3 - Computer(medium)\n"
+            << "4 - Computer(hard\n";
+        cin >> *red_player;
+        if (*red_player < 1 || *red_player > 4)  cout << "niepoprawna wartosc\n";
+    } while (*red_player < 1 || *red_player > 4);
+    if (*red_player == 4) {
+        do {
+            cout << "depth: "; cin >> hard_ai_red->depth;
+            cout << "dilation: "; cin >> hard_ai_red->dilation;
+            if (hard_ai_red->depth > 5 || hard_ai_red->depth < 0)      cout << "depth musi byc w zakresie 0-5\n";
+            if (hard_ai_red->dilation > 100 || hard_ai_red->dilation < 0)   cout << "dialation musi byc w zakresie 0-100\n";
+        } while (hard_ai_red->depth > 5 || hard_ai_red->depth < 0 || hard_ai_red->dilation > 100 || hard_ai_red->dilation < 0);
+    }
+    do {
+        cout << "chose blue player:\n"
+            << "1 - Human\n"
+            << "2 - Computer(easy)\n"
+            << "3 - Computer(medium)\n"
+            << "4 - Computer(hard\n";
+        cin >> *blue_player;
+        if (*blue_player < 1 || *blue_player > 4)  cout << "niepoprawna wartosc\n";
+    } while (*blue_player < 1 || *blue_player > 4);
+    if (*blue_player == 4) {
+        do {
+            cout << "depth: "; cin >> hard_ai_blue->depth;
+            cout << "dilation: "; cin >> hard_ai_blue->dilation;
+            if (hard_ai_blue->depth > 5 || hard_ai_blue->depth < 0)      cout << "depth musi byc w zakresie 0-5\n";
+            if (hard_ai_blue->dilation > 100 || hard_ai_blue->dilation < 0)   cout << "dialation musi byc w zakresie 0-100\n";
+        } while (hard_ai_blue->depth > 5 || hard_ai_blue->depth < 0 || hard_ai_blue->dilation > 100 || hard_ai_blue->dilation < 0);
+    }
+    do {
+        cout << "liczba meczy: "; cin >> *number_matches;
+        if (*number_matches < 0) "liczba meczy musi być dodatnia";
+    } while (*number_matches < 0);
 }
 
 void printcell(struct cell cell) {
@@ -288,6 +270,8 @@ bool direction_valid(char direction) {
 }
 char valid_move(struct cell board[4][4]) {
     bool loop = 0;
+    char moves[4] = { 'w','s','a','d' };
+    int moves_number = 4;
     char direction = 0;
     do {       //nie pozwól wprowadzić nieprawidłowego znaku ani takiego któy nie zmienia stanu planszy
         loop = 0;
@@ -298,7 +282,17 @@ char valid_move(struct cell board[4][4]) {
         }
         if (!merge(board, direction)) {
             cout << "nie mozna wykonac ruchu\n";
-            loop = 1;
+            for (int i = 0; i < 4; i++) {
+                if (moves[i] == direction) {
+                    moves[i] = 0;
+                    moves_number--;
+                }
+            }
+            if (moves_number == 0) {
+                loop = 0;
+                direction = 'x';
+            }
+            else    loop = 1;
         }
     } while (loop);
     return direction;
